@@ -2,35 +2,34 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace BDX.MagicShapes.UI
 {
     public partial class MainForm : Form
     {
-        private Point currentPoint, mouseDownPoint, mouseUpPoint;
-        private bool mouseDown, zoomed;
-        private Graphics graphicsCanvas;
-        private Pen borderPen;
-        private SolidBrush brush;
-        private Rectangle rectangle;
-        private LinkedList<Rectangle> rectangles;
+        private Point CurrentPoint, MouseDownPoint;
+        private bool MouseClickHolded, ValidSize, Zoomed;
+        private Graphics GraphicsCanvas;
+        private Pen BorderPen;
+        private SolidBrush Brush;
+        private Rectangle Rectangle;
+        private LinkedList<Rectangle> Rectangles;
 
         public MainForm()
         {
             InitializeComponent();
-            rectangles = new LinkedList<Rectangle>();
-            graphicsCanvas = this.canvasPanel.CreateGraphics();
-            graphicsCanvas.InterpolationMode = InterpolationMode.HighQualityBilinear;
-            borderPen = new Pen(Color.Olive, 2);
-            brush = new SolidBrush(Color.FromArgb(128, 0, 0, 255));
+            Rectangles = new LinkedList<Rectangle>();
+            GraphicsCanvas = this.canvasPanel.CreateGraphics();
+            GraphicsCanvas.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            BorderPen = new Pen(Color.Olive, 1);
+            Brush = new SolidBrush(Color.FromArgb(128, 0, 0, 255));
         }
 
         private void buttonZoom_Click(object sender, EventArgs e)
         {
-            zoomed = !zoomed;
-            if (zoomed)
+            Zoomed = !Zoomed;
+            if (Zoomed)
             {
                 buttonZoom.Text = "Zoom Out";
             }
@@ -42,101 +41,128 @@ namespace BDX.MagicShapes.UI
 
         private void canvas_MouseMove(object sender, MouseEventArgs e)
         {
-            currentPoint = canvasPanel.PointToClient(Cursor.Position);
-            if (mouseDown)
+            CurrentPoint = canvasPanel.PointToClient(Cursor.Position);
+            if (MouseClickHolded)
             {
                 DrawRectangle();
+                ValidSize = true;
             }
         }
 
         private void canvas_MouseDown(object sender, MouseEventArgs e)
         {
-            mouseDownPoint = canvasPanel.PointToClient(Cursor.Position);
-            mouseDown = true;
+            MouseDownPoint = canvasPanel.PointToClient(Cursor.Position);
+            MouseClickHolded = true;
         }
 
         private void canvas_MouseUp(object sender, MouseEventArgs e)
         {
-            mouseUpPoint = canvasPanel.PointToClient(Cursor.Position);
-            AddRectangle();
-            mouseDown = false;
+            if (ValidSize)
+                AddRectangle();
+            GraphicsCanvas.Clear(Color.White);
+            LoadRectangles();
+            MouseClickHolded = false;
+            ValidSize = false;
         }
 
         private void DrawRectangle()
         {
-            graphicsCanvas.Clear(Color.White);
+            GraphicsCanvas.Clear(Color.White);
             //Draw previous rectangles
             LoadRectangles();
-            Point locationPoint = new Point(Math.Min(mouseDownPoint.X, currentPoint.X), Math.Min(mouseDownPoint.Y, currentPoint.Y));
-            int width = Math.Abs(mouseDownPoint.X - currentPoint.X);
-            int height = Math.Abs(mouseDownPoint.Y - currentPoint.Y);
-            rectangle = new Rectangle(locationPoint.X, locationPoint.Y, width, height);
-            graphicsCanvas.FillRectangle(brush, rectangle);
-            graphicsCanvas.DrawRectangle(borderPen, rectangle);
+            Point locationPoint = new Point(Math.Min(MouseDownPoint.X, CurrentPoint.X), Math.Min(MouseDownPoint.Y, CurrentPoint.Y));
+            int width = Math.Abs(MouseDownPoint.X - CurrentPoint.X);
+            int height = Math.Abs(MouseDownPoint.Y - CurrentPoint.Y);
+            Rectangle = new Rectangle(locationPoint.X, locationPoint.Y, width, height);
+            GraphicsCanvas.FillRectangle(Brush, Rectangle);
+            GraphicsCanvas.DrawRectangle(BorderPen, Rectangle);
         }
 
         private void LoadRectangles()
         {
-            foreach (Rectangle rectangle in rectangles)
+            foreach (Rectangle rectangle in Rectangles)
             {
-                graphicsCanvas.FillRectangle(brush, rectangle);
-                graphicsCanvas.DrawRectangle(borderPen, rectangle);
+                GraphicsCanvas.FillRectangle(Brush, rectangle);
+                GraphicsCanvas.DrawRectangle(BorderPen, rectangle);
             }
         }
 
-        private void AddRectangle()
+        private void buttonClear_Click(object sender, EventArgs e)
         {
-            Boolean acceptedRectangle = true;
-            foreach (Rectangle listRectangle in rectangles)
+            Rectangles.Clear();
+            GraphicsCanvas.Clear(Color.White);
+            label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
+        }
+
+        private void tableLayoutPanel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private Boolean AddRectangle()
+        {
+            Boolean rectangleAdded = true;
+            Rectangle tempRectangle = new Rectangle();
+            foreach (Rectangle listRectangle in Rectangles)
             {
-                if (Overlapses(rectangle, listRectangle) || Overlapses(listRectangle, rectangle))
+                if (Rectangle.IntersectsWith(listRectangle))
                 {
                     MessageBox.Show("Rectangle overlapses with other...");
-                    graphicsCanvas.Clear(Color.White);
-                    LoadRectangles();
-                    acceptedRectangle = false;
-                    return;
+                    rectangleAdded = false;
+                    return false;
                 }
                 else
                 {
-                    //If rectangle has common borders with others
-                    if (InAcceptableRange(rectangle.X, listRectangle.X) && InAcceptableRange(rectangle.Y + rectangle.Height, listRectangle.Y))
+                    //If rectangle has common borders with others and can be merged
+                    if (InAcceptableRange(Rectangle.Left, listRectangle.Left) && InAcceptableRange(Rectangle.Bottom, listRectangle.Top) && InAcceptableRange(Rectangle.Right, listRectangle.Right))
                     {
                         MessageBox.Show("On top of another");
+                        Rectangle.Height = Rectangle.Height + listRectangle.Height;
+                        tempRectangle = listRectangle;
                     }
-                    else if (InAcceptableRange(rectangle.X, listRectangle.X) && InAcceptableRange(rectangle.Y, listRectangle.Y + listRectangle.Height))
+                    else if (InAcceptableRange(Rectangle.Right, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Bottom) && InAcceptableRange(Rectangle.Left, listRectangle.Left))
                     {
                         MessageBox.Show("On bottom of another");
+                        Rectangle.Location = listRectangle.Location;
+                        Rectangle.Height = Rectangle.Height + listRectangle.Height;
+                        tempRectangle = listRectangle;
                     }
-                    else if (InAcceptableRange(rectangle.X, listRectangle.X + listRectangle.Width) && InAcceptableRange(rectangle.Y, listRectangle.Y))
+                    else if (InAcceptableRange(Rectangle.Left, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
                     {
                         MessageBox.Show("On right of another");
+                        Rectangle.Location = listRectangle.Location;
+                        Rectangle.Width = Rectangle.Width + listRectangle.Width;
+                        tempRectangle = listRectangle;
                     }
-                    else if (InAcceptableRange(rectangle.X + rectangle.Width, listRectangle.X) && InAcceptableRange(rectangle.Y, listRectangle.Y))
+                    else if (InAcceptableRange(Rectangle.Right, listRectangle.Left) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
                     {
                         MessageBox.Show("On left of another");
+                        Rectangle.Width = Rectangle.Width + listRectangle.Width;
+                        tempRectangle = listRectangle;
                     }
                 }
             }
-            if (acceptedRectangle)
-                rectangles.AddLast(rectangle);
+            if (rectangleAdded)
+            {
+                Rectangles.Remove(tempRectangle);
+                Rectangles.AddLast(Rectangle);
+                label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
+                return true;
+            }
+            return false;
         }
 
         private bool InAcceptableRange(int numberToCheck, int compareTo)
         {
-            int acceptedVariation = 3;
+            int acceptedVariation = 5;
             int bottom = compareTo - acceptedVariation;
             int top = compareTo + acceptedVariation;
             return (numberToCheck >= bottom && numberToCheck <= top);
         }
 
-        private bool Overlapses(Rectangle rectangleA, Rectangle rectangleB)
+        private bool MergeIfPossible(Rectangle comparableRectangle)
         {
-            if ((rectangleA.X > rectangleB.X && rectangleA.X < rectangleB.X + rectangleB.Width && rectangleA.Y > rectangleB.Y && rectangleA.Y < rectangleB.Y + rectangleB.Height)
-                || (rectangleA.X+rectangleA.Width > rectangleB.X && rectangleA.X+rectangleA.Width < rectangleB.X + rectangleB.Width && rectangleA.Y > rectangleB.Y && rectangleA.Y < rectangleB.Y + rectangleB.Height))
-            {
-                return true;
-            }
+
             return false;
         }
     }
