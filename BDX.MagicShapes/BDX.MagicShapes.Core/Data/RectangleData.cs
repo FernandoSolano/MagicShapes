@@ -12,14 +12,12 @@ namespace BDX.MagicShapes.Core.Data
 {
     public class RectangleData
     {
-        public Boolean Store(LinkedList<Rectangle> rectangles)
+        public Boolean Store(LinkedList<Rectangle> rectangles, String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream("MagicShapesSave.bin",
-                                         FileMode.Create,
-                                         FileAccess.Write, FileShare.None);
+                Stream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
                 formatter.Serialize(stream, rectangles);
                 stream.Close();
                 return true;
@@ -30,15 +28,12 @@ namespace BDX.MagicShapes.Core.Data
             }
         }
 
-        public LinkedList<Rectangle> Retrieve()
+        public LinkedList<Rectangle> Retrieve(String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream("MagicShapesSave.bin",
-                                          FileMode.Open,
-                                          FileAccess.Read,
-                                          FileShare.Read);
+                Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
                 LinkedList<Rectangle> rectangles = (LinkedList<Rectangle>)formatter.Deserialize(stream);
                 stream.Close();
                 return rectangles;

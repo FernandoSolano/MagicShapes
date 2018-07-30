@@ -32,7 +32,9 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.labelZoomValue = new System.Windows.Forms.Label();
+            this.labelZoom = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
             this.canvasPanel = new System.Windows.Forms.Panel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -42,8 +44,6 @@
             this.clearAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.zoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.labelZoom = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -109,6 +109,21 @@
             this.labelZoomValue.Text = "x1";
             this.labelZoomValue.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // labelZoom
+            // 
+            this.labelZoom.AutoSize = true;
+            this.labelZoom.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.labelZoom.Dock = System.Windows.Forms.DockStyle.Left;
+            this.labelZoom.Image = global::BDX.MagicShapes.UI.Properties.Resources.ZoomIn_16x;
+            this.labelZoom.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.labelZoom.Location = new System.Drawing.Point(3, 0);
+            this.labelZoom.Name = "labelZoom";
+            this.labelZoom.Size = new System.Drawing.Size(16, 13);
+            this.labelZoom.TabIndex = 2;
+            this.labelZoom.Text = "   ";
+            this.labelZoom.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.labelZoom.Click += new System.EventHandler(this.buttonZoom_Click);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -119,6 +134,19 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Cantidad de rectángulos: 0";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.label2.Dock = System.Windows.Forms.DockStyle.Right;
+            this.label2.Image = global::BDX.MagicShapes.UI.Properties.Resources.CleanData_16x;
+            this.label2.Location = new System.Drawing.Point(959, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(16, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "   ";
+            this.label2.Click += new System.EventHandler(this.buttonClear_Click);
             // 
             // canvasPanel
             // 
@@ -200,34 +228,6 @@
             this.zoomToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.zoomToolStripMenuItem.Text = "Zoom In";
             this.zoomToolStripMenuItem.Click += new System.EventHandler(this.buttonZoom_Click);
-            // 
-            // labelZoom
-            // 
-            this.labelZoom.AutoSize = true;
-            this.labelZoom.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.labelZoom.Dock = System.Windows.Forms.DockStyle.Left;
-            this.labelZoom.Image = global::BDX.MagicShapes.UI.Properties.Resources.ZoomIn_16x;
-            this.labelZoom.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.labelZoom.Location = new System.Drawing.Point(3, 0);
-            this.labelZoom.Name = "labelZoom";
-            this.labelZoom.Size = new System.Drawing.Size(16, 13);
-            this.labelZoom.TabIndex = 2;
-            this.labelZoom.Text = "   ";
-            this.labelZoom.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.labelZoom.Click += new System.EventHandler(this.buttonZoom_Click);
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.label2.Dock = System.Windows.Forms.DockStyle.Right;
-            this.label2.Image = global::BDX.MagicShapes.UI.Properties.Resources.CleanData_16x;
-            this.label2.Location = new System.Drawing.Point(959, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(16, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "   ";
-            this.label2.Click += new System.EventHandler(this.buttonClear_Click);
             // 
             // MainForm
             // 

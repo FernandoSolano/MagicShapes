@@ -17,14 +17,14 @@ namespace BDX.MagicShapes.Core.Business
             rectangleData = new RectangleData();
         }
 
-        public Boolean Store(LinkedList<Rectangle> rectangles)
+        public Boolean Store(LinkedList<Rectangle> rectangles, String path)
         {
-            return rectangleData.Store(rectangles);
+            return rectangleData.Store(rectangles, path);
         }
 
-        public LinkedList<Rectangle> Retrieve()
+        public LinkedList<Rectangle> Retrieve(String path)
         {
-            return rectangleData.Retrieve();
+            return rectangleData.Retrieve(path);
         }
     }
 }

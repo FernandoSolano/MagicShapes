@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows.Forms;
 
 namespace BDX.MagicShapes.UI
@@ -121,15 +122,29 @@ namespace BDX.MagicShapes.UI
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            saveFileDialog.FileName = "MagicShapesSave";
+            saveFileDialog.DefaultExt = "bin";
+            saveFileDialog.Filter = "Binary (*.bin)|*.bin";
+            saveFileDialog.ShowDialog();
             RectangleBusiness rectangleBusiness = new RectangleBusiness();
-            rectangleBusiness.Store(Rectangles);
+            rectangleBusiness.Store(Rectangles, saveFileDialog.FileName);
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            RectangleBusiness rectangleBusiness = new RectangleBusiness();
-            Rectangles = rectangleBusiness.Retrieve();
-            canvasPanel.Invalidate();
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            openFileDialog.Filter = "Binary (*.bin)|*.bin";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                RectangleBusiness rectangleBusiness = new RectangleBusiness();
+                LinkedList<Rectangle> fileRectangles = rectangleBusiness.Retrieve(openFileDialog.FileName);
+                Rectangles = fileRectangles;
+                canvasPanel.Invalidate();
+            }
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
