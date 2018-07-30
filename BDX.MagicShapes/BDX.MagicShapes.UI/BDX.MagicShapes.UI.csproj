@@ -64,6 +64,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -83,6 +84,18 @@
       <Project>{bf47e5e8-4ab5-4a85-ad39-81a4d34750b7}</Project>
       <Name>BDX.MagicShapes.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ZoomIn_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ZoomOut_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CleanData_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ClearCollection_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
