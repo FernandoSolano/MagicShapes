@@ -1,24 +1,22 @@
-﻿using System;
+﻿using BDX.MagicShapes.Core.Model;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BDX.MagicShapes.Core.Data
 {
-    public class RectangleData
+    public class PolygonData
     {
-        public Boolean Store(LinkedList<Rectangle> rectangles, String path)
+        public Boolean Store(LinkedList<Polygon> polygons, String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
                 Stream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                formatter.Serialize(stream, rectangles);
+                formatter.Serialize(stream, polygons);
                 stream.Close();
                 return true;
             }
@@ -28,15 +26,15 @@ namespace BDX.MagicShapes.Core.Data
             }
         }
 
-        public LinkedList<Rectangle> Retrieve(String path)
+        public LinkedList<Polygon> Retrieve(String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
                 Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                LinkedList<Rectangle> rectangles = (LinkedList<Rectangle>)formatter.Deserialize(stream);
+                LinkedList<Polygon> polygons = (LinkedList<Polygon>)formatter.Deserialize(stream);
                 stream.Close();
-                return rectangles;
+                return polygons;
             }
             catch
             {

@@ -1,4 +1,5 @@
 ﻿using BDX.MagicShapes.Core.Business;
+using BDX.MagicShapes.Core.Model;
 using BDX.MagicShapes.UI.Properties;
 using System;
 using System.Collections.Generic;
@@ -15,21 +16,49 @@ namespace BDX.MagicShapes.UI
         private bool MouseClickHolded, ValidSize, Zoomed;
         private Graphics GraphicsCanvas;
         private Pen BorderPen;
-        private SolidBrush Brush;
-        private Rectangle Rectangle;
-        private LinkedList<Rectangle> Rectangles;
+        private SolidBrush FillBrush;
         private float ZoomValue;
+
+        private LinkedList<Polygon> Polygons;
+        private Polygon Polygon;
 
         public MainForm()
         {
             InitializeComponent();
-            Rectangles = new LinkedList<Rectangle>();
+            Polygons = new LinkedList<Polygon>();
             GraphicsCanvas = this.canvasPanel.CreateGraphics();
             GraphicsCanvas.InterpolationMode = InterpolationMode.HighQualityBilinear;
             ZoomValue = 1f;
             Zoomed = false;
             BorderPen = new Pen(Color.Olive, 1);
-            Brush = new SolidBrush(Color.FromArgb(128, 0, 0, 255));
+            FillBrush = new SolidBrush(Color.FromArgb(128, 0, 0, 255));
+        }
+
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            openFileDialog.Filter = "Binary (*.bin)|*.bin";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                PolygonBusiness polygonBusiness = new PolygonBusiness();
+                LinkedList<Polygon> filePolygons = polygonBusiness.Retrieve(openFileDialog.FileName);
+                Polygons = filePolygons;
+                canvasPanel.Invalidate();
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            saveFileDialog.FileName = "MagicShapesSave";
+            saveFileDialog.DefaultExt = "bin";
+            saveFileDialog.Filter = "Binary (*.bin)|*.bin";
+            saveFileDialog.ShowDialog();
+            PolygonBusiness polygonBusiness = new PolygonBusiness();
+            polygonBusiness.Store(Polygons, saveFileDialog.FileName);
         }
 
         private void buttonZoom_Click(object sender, EventArgs e)
@@ -51,6 +80,12 @@ namespace BDX.MagicShapes.UI
             }
             canvasPanel.Invalidate();
             GraphicsCanvas.ScaleTransform(ZoomValue, ZoomValue);
+        }
+
+        private void buttonClear_Click(object sender, EventArgs e)
+        {
+            Polygons.Clear();
+            canvasPanel.Invalidate();
         }
 
         private void canvas_MouseMove(object sender, MouseEventArgs e)
@@ -84,135 +119,106 @@ namespace BDX.MagicShapes.UI
         private void canvas_MouseUp(object sender, MouseEventArgs e)
         {
             if (ValidSize)
-                AddRectangle();
-            GraphicsCanvas.Clear(Color.White);
-            LoadRectangles();
+                AddPolygon();
+            canvasPanel.Invalidate();
             MouseClickHolded = false;
             ValidSize = false;
         }
 
-        private void DrawRectangle()
-        {
-            GraphicsCanvas.Clear(Color.White);
-            //Draw previous rectangles
-            LoadRectangles();
-            Point locationPoint = new Point(Math.Min(MouseDownPoint.X, CurrentPoint.X), Math.Min(MouseDownPoint.Y, CurrentPoint.Y));
-            int width = Math.Abs(MouseDownPoint.X - CurrentPoint.X);
-            int height = Math.Abs(MouseDownPoint.Y - CurrentPoint.Y);
-            Rectangle = new Rectangle(locationPoint.X, locationPoint.Y, width, height);
-            GraphicsCanvas.FillRectangle(Brush, Rectangle);
-            GraphicsCanvas.DrawRectangle(BorderPen, Rectangle);
-        }
-
-        private void LoadRectangles()
-        {
-            foreach (Rectangle rectangle in Rectangles)
-            {
-                GraphicsCanvas.FillRectangle(Brush, rectangle);
-                GraphicsCanvas.DrawRectangle(BorderPen, rectangle);
-            }
-        }
-
+        //ToDo... Paint external borders only
         private void canvasPanel_Paint(object sender, PaintEventArgs e)
         {
             GraphicsCanvas.Clear(Color.White);
-            LoadRectangles();
-            label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
-        }
-
-        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            saveFileDialog.FileName = "MagicShapesSave";
-            saveFileDialog.DefaultExt = "bin";
-            saveFileDialog.Filter = "Binary (*.bin)|*.bin";
-            saveFileDialog.ShowDialog();
-            RectangleBusiness rectangleBusiness = new RectangleBusiness();
-            rectangleBusiness.Store(Rectangles, saveFileDialog.FileName);
-        }
-
-        private void openToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            openFileDialog.Filter = "Binary (*.bin)|*.bin";
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            foreach (Polygon polygon in Polygons)
             {
-                RectangleBusiness rectangleBusiness = new RectangleBusiness();
-                LinkedList<Rectangle> fileRectangles = rectangleBusiness.Retrieve(openFileDialog.FileName);
-                Rectangles = fileRectangles;
-                canvasPanel.Invalidate();
+                GraphicsCanvas.FillPolygon(FillBrush, polygon.Points.ToArray());
+                GraphicsCanvas.DrawPolygon(BorderPen, polygon.Points.ToArray());
             }
+            label1.Text = "Total shapes: " + Polygons.Count;
         }
 
-        private void buttonClear_Click(object sender, EventArgs e)
+        private Boolean AddPolygon()
         {
-            Rectangles.Clear();
-            canvasPanel.Invalidate();
-        }
-
-        private Boolean AddRectangle()
-        {
-            Boolean rectangleAdded = true;
-            Rectangle tempRectangle = new Rectangle();
-            LinkedList<Rectangle> mergedRectangles = new LinkedList<Rectangle>();
-            foreach (Rectangle listRectangle in Rectangles)
+            Boolean polygonAdded = true;
+            Polygon tempPolygon = new Polygon();
+            LinkedList<Polygon> mergedPolygons = new LinkedList<Polygon>();
+            foreach (Polygon listPolygon in Polygons)
             {
-                if (Rectangle.IntersectsWith(listRectangle))
+                if (Intersects(listPolygon))
                 {
                     MessageBox.Show("Rectangle overlapses with other...");
-                    rectangleAdded = false;
+                    polygonAdded = false;
                     return false;
                 }
                 else
                 {
                     //If rectangle has common borders with others and can be merged
-                    if (InAcceptableRange(Rectangle.Left, listRectangle.Left) && InAcceptableRange(Rectangle.Bottom, listRectangle.Top) && InAcceptableRange(Rectangle.Right, listRectangle.Right))
+                    if (InAcceptableRange(Polygon.Left, listPolygon.Left) && InAcceptableRange(Polygon.Bottom, listPolygon.Top) && InAcceptableRange(Polygon.Right, listPolygon.Right))
                     {
                         //MessageBox.Show("On top of another");
-                        Rectangle.Height = Rectangle.Height + listRectangle.Height;
-                        tempRectangle = listRectangle;
-                        mergedRectangles.AddLast(listRectangle);
+                        Polygon.Height = Polygon.Height + listPolygon.Height;
+                        tempPolygon = listPolygon;
+                        mergedPolygons.AddLast(listPolygon);
                     }
-                    else if (InAcceptableRange(Rectangle.Right, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Bottom) && InAcceptableRange(Rectangle.Left, listRectangle.Left))
+                    else if (InAcceptableRange(Polygon.Right, listPolygon.Right) && InAcceptableRange(Polygon.Top, listPolygon.Bottom) && InAcceptableRange(Polygon.Left, listPolygon.Left))
                     {
                         //MessageBox.Show("On bottom of another");
-                        Rectangle.Location = listRectangle.Location;
-                        Rectangle.Height = Rectangle.Height + listRectangle.Height;
-                        tempRectangle = listRectangle;
-                        mergedRectangles.AddLast(listRectangle);
+                        Polygon.Location = listPolygon.Location;
+                        Polygon.Height = Polygon.Height + listPolygon.Height;
+                        tempPolygon = listPolygon;
+                        mergedPolygons.AddLast(listPolygon);
                     }
-                    else if (InAcceptableRange(Rectangle.Left, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
+                    else if (InAcceptableRange(Polygon.Left, listPolygon.Right) && InAcceptableRange(Polygon.Top, listPolygon.Top) && InAcceptableRange(Polygon.Bottom, listPolygon.Bottom))
                     {
                         //MessageBox.Show("On right of another");
-                        Rectangle.Location = listRectangle.Location;
-                        Rectangle.Width = Rectangle.Width + listRectangle.Width;
-                        tempRectangle = listRectangle;
-                        mergedRectangles.AddLast(listRectangle);
+                        Polygon.Location = listPolygon.Location;
+                        Polygon.Width = Polygon.Width + listPolygon.Width;
+                        tempPolygon = listPolygon;
+                        mergedPolygons.AddLast(listPolygon);
                     }
-                    else if (InAcceptableRange(Rectangle.Right, listRectangle.Left) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
+                    else if (InAcceptableRange(Polygon.Right, listPolygon.Left) && InAcceptableRange(Polygon.Top, listPolygon.Top) && InAcceptableRange(Polygon.Bottom, listPolygon.Bottom))
                     {
                         //MessageBox.Show("On left of another");
-                        Rectangle.Width = Rectangle.Width + listRectangle.Width;
-                        tempRectangle = listRectangle;
-                        mergedRectangles.AddLast(listRectangle);
+                        Polygon.Width = Polygon.Width + listPolygon.Width;
+                        tempPolygon = listPolygon;
+                        mergedPolygons.AddLast(listPolygon);
                     }
                 }
             }
-            if (rectangleAdded)
+            if (polygonAdded)
             {
                 //Rectangles.Remove(tempRectangle);
-                foreach (Rectangle mergedRectangle in mergedRectangles)
+                foreach (Polygon mergedRectangle in mergedPolygons)
                 {
-                    Rectangles.Remove(mergedRectangle);
+                    Polygons.Remove(mergedRectangle);
                 }
-                Rectangles.AddLast(Rectangle);
-                label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
+                Polygons.AddLast(Polygon);
+                label1.Text = "Cantidad de rectángulos: " + Polygons.Count;
                 return true;
 
             }
+            return false;
+        }
+
+        private void DrawRectangle()
+        {
+            //Draw previous rectangles
+            canvasPanel.Invalidate();
+            Point locationPoint = new Point(Math.Min(MouseDownPoint.X, CurrentPoint.X), Math.Min(MouseDownPoint.Y, CurrentPoint.Y));
+            int width = Math.Abs(MouseDownPoint.X - CurrentPoint.X);
+            int height = Math.Abs(MouseDownPoint.Y - CurrentPoint.Y);
+            Polygon = new Polygon();
+            Polygon.Points.Add(locationPoint);
+            Polygon.Points.Add(new Point(CurrentPoint.X, locationPoint.Y));
+            Polygon.Points.Add(CurrentPoint);
+            Polygon.Points.Add(new Point(locationPoint.X, CurrentPoint.Y));
+            GraphicsCanvas.FillPolygon(FillBrush, Polygon.Points.ToArray());
+            GraphicsCanvas.DrawPolygon(BorderPen, Polygon.Points.ToArray());
+        }
+
+        private bool Intersects(Polygon listPolygon)
+        {
+            //ToDo...
             return false;
         }
 
@@ -222,6 +228,24 @@ namespace BDX.MagicShapes.UI
             int bottom = compareTo - acceptedVariation;
             int top = compareTo + acceptedVariation;
             return (numberToCheck >= bottom && numberToCheck <= top);
+        }
+
+        public void DrawPolygon()
+        {
+            // Create points that define polygon.
+            Point point1 = new Point(50, 50);
+            Point point2 = new Point(100, 50);
+            Point point3 = new Point(100, 100);
+            Point point4 = new Point(50, 100);
+            Point[] curvePoints =
+                     {
+                 point1,
+                 point2,
+                 point3,
+                 point4
+             };
+            // Draw polygon to screen.
+            GraphicsCanvas.DrawPolygon(BorderPen, curvePoints);
         }
     }
 }
