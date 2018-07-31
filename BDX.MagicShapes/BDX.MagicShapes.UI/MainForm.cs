@@ -142,7 +142,7 @@ namespace BDX.MagicShapes.UI
             Boolean polygonAdded = true;
             Polygon tempPolygon = new Polygon();
             LinkedList<Polygon> mergedPolygons = new LinkedList<Polygon>();
-            foreach (Polygon listPolygon in Polygons)
+            foreach (Polygon listPolygon in Polygons)//1
             {
                 if (Intersects(listPolygon))
                 {
@@ -152,45 +152,48 @@ namespace BDX.MagicShapes.UI
                 }
                 else
                 {
+                    //ToDo...
                     //If rectangle has common borders with others and can be merged
-                    if (InAcceptableRange(Polygon.Left, listPolygon.Left) && InAcceptableRange(Polygon.Bottom, listPolygon.Top) && InAcceptableRange(Polygon.Right, listPolygon.Right))
+                    foreach (Point currentPolygonPoint in Polygon.Points)//2
                     {
-                        //MessageBox.Show("On top of another");
-                        Polygon.Height = Polygon.Height + listPolygon.Height;
-                        tempPolygon = listPolygon;
-                        mergedPolygons.AddLast(listPolygon);
-                    }
-                    else if (InAcceptableRange(Polygon.Right, listPolygon.Right) && InAcceptableRange(Polygon.Top, listPolygon.Bottom) && InAcceptableRange(Polygon.Left, listPolygon.Left))
-                    {
-                        //MessageBox.Show("On bottom of another");
-                        Polygon.Location = listPolygon.Location;
-                        Polygon.Height = Polygon.Height + listPolygon.Height;
-                        tempPolygon = listPolygon;
-                        mergedPolygons.AddLast(listPolygon);
-                    }
-                    else if (InAcceptableRange(Polygon.Left, listPolygon.Right) && InAcceptableRange(Polygon.Top, listPolygon.Top) && InAcceptableRange(Polygon.Bottom, listPolygon.Bottom))
-                    {
-                        //MessageBox.Show("On right of another");
-                        Polygon.Location = listPolygon.Location;
-                        Polygon.Width = Polygon.Width + listPolygon.Width;
-                        tempPolygon = listPolygon;
-                        mergedPolygons.AddLast(listPolygon);
-                    }
-                    else if (InAcceptableRange(Polygon.Right, listPolygon.Left) && InAcceptableRange(Polygon.Top, listPolygon.Top) && InAcceptableRange(Polygon.Bottom, listPolygon.Bottom))
-                    {
-                        //MessageBox.Show("On left of another");
-                        Polygon.Width = Polygon.Width + listPolygon.Width;
-                        tempPolygon = listPolygon;
-                        mergedPolygons.AddLast(listPolygon);
+                        foreach (Point listPolygonPoint in listPolygon.Points)//3
+                        {
+                            if (currentPolygonPoint.X == listPolygonPoint.X)
+                            {
+                                foreach (Point listPolygonPointIter in listPolygon.Points)//3a
+                                {
+                                    if (Mergueable(currentPolygonPoint.Y, listPolygonPoint.Y, listPolygonPointIter.Y))
+                                    {
+                                        //Mergue
+                                        Polygon.Points.AddRange(listPolygon.Points);
+                                        mergedPolygons.AddLast(Polygon);
+                                        //break here
+                                    }
+                                }
+                            }
+                            else if (currentPolygonPoint.Y == listPolygonPoint.Y)
+                            {
+                                foreach (Point listPolygonPointIter in listPolygon.Points)//3a
+                                {
+                                    if (Mergueable(currentPolygonPoint.X, listPolygonPoint.X, listPolygonPointIter.X))
+                                    {
+                                        //Mergue
+                                        Polygon.Points.AddRange(listPolygon.Points);
+                                        mergedPolygons.AddLast(Polygon);
+                                        //Break here
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
             if (polygonAdded)
             {
                 //Rectangles.Remove(tempRectangle);
-                foreach (Polygon mergedRectangle in mergedPolygons)
+                foreach (Polygon mergedPolygon in mergedPolygons)
                 {
-                    Polygons.Remove(mergedRectangle);
+                    Polygons.Remove(mergedPolygon);
                 }
                 Polygons.AddLast(Polygon);
                 label1.Text = "Cantidad de rectángulos: " + Polygons.Count;
@@ -222,11 +225,11 @@ namespace BDX.MagicShapes.UI
             return false;
         }
 
-        private bool InAcceptableRange(int numberToCheck, int compareTo)
+        private bool Mergueable(int numberToCheck, int bottom, int top)
         {
-            int acceptedVariation = 5;
-            int bottom = compareTo - acceptedVariation;
-            int top = compareTo + acceptedVariation;
+            int acceptedVariation = 3;
+            bottom -= acceptedVariation;
+            top += acceptedVariation;
             return (numberToCheck >= bottom && numberToCheck <= top);
         }
 
