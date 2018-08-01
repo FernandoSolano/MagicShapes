@@ -1,10 +1,6 @@
 ﻿using BDX.MagicShapes.Core.Data;
+using BDX.MagicShapes.Core.Model;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BDX.MagicShapes.Core.Business
 {
@@ -17,12 +13,12 @@ namespace BDX.MagicShapes.Core.Business
             rectangleData = new RectangleData();
         }
 
-        public Boolean Store(LinkedList<Rectangle> rectangles, String path)
+        public Boolean Store(AppState appState, String path)
         {
-            return rectangleData.Store(rectangles, path);
+            return rectangleData.Store(appState, path);
         }
 
-        public LinkedList<Rectangle> Retrieve(String path)
+        public AppState Retrieve(String path)
         {
             return rectangleData.Retrieve(path);
         }

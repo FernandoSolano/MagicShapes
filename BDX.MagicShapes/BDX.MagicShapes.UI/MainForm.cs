@@ -1,4 +1,5 @@
 ﻿using BDX.MagicShapes.Core.Business;
+using BDX.MagicShapes.Core.Model;
 using BDX.MagicShapes.UI.Properties;
 using System;
 using System.Collections.Generic;
@@ -15,21 +16,27 @@ namespace BDX.MagicShapes.UI
         private bool MouseClickHolded, ValidSize, Zoomed;
         private Graphics GraphicsCanvas;
         private Pen BorderPen;
-        private SolidBrush Brush;
+        private SolidBrush Brush, AuxBrush;
         private Rectangle Rectangle;
-        private LinkedList<Rectangle> Rectangles;
+        private LinkedList<Rectangle> Rectangles, AuxRectangles;
+        private LinkedList<Point[]> AuxLines;
         private float ZoomValue;
+        private int mergedCounter;
 
         public MainForm()
         {
             InitializeComponent();
             Rectangles = new LinkedList<Rectangle>();
+            AuxRectangles = new LinkedList<Rectangle>();
+            AuxLines = new LinkedList<Point[]>();
             GraphicsCanvas = this.canvasPanel.CreateGraphics();
             GraphicsCanvas.InterpolationMode = InterpolationMode.HighQualityBilinear;
             ZoomValue = 1f;
             Zoomed = false;
             BorderPen = new Pen(Color.Olive, 1);
             Brush = new SolidBrush(Color.FromArgb(128, 0, 0, 255));
+            AuxBrush = new SolidBrush(ColorTranslator.FromHtml("#7F7FFF"));
+            mergedCounter = 0;
         }
 
         private void buttonZoom_Click(object sender, EventArgs e)
@@ -111,13 +118,18 @@ namespace BDX.MagicShapes.UI
                 GraphicsCanvas.FillRectangle(Brush, rectangle);
                 GraphicsCanvas.DrawRectangle(BorderPen, rectangle);
             }
+            foreach (Rectangle rectangle in AuxRectangles)
+            {
+                //GraphicsCanvas.FillRectangle(Brush, rectangle);
+                GraphicsCanvas.FillRectangle(AuxBrush, rectangle);
+            }
         }
 
         private void canvasPanel_Paint(object sender, PaintEventArgs e)
         {
             GraphicsCanvas.Clear(Color.White);
             LoadRectangles();
-            label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
+            label1.Text = "Cantidad de rectángulos: " + (Rectangles.Count - mergedCounter);
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -129,7 +141,7 @@ namespace BDX.MagicShapes.UI
             saveFileDialog.Filter = "Binary (*.bin)|*.bin";
             saveFileDialog.ShowDialog();
             RectangleBusiness rectangleBusiness = new RectangleBusiness();
-            rectangleBusiness.Store(Rectangles, saveFileDialog.FileName);
+            rectangleBusiness.Store(new AppState(Rectangles, AuxRectangles), saveFileDialog.FileName);
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -141,8 +153,10 @@ namespace BDX.MagicShapes.UI
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 RectangleBusiness rectangleBusiness = new RectangleBusiness();
-                LinkedList<Rectangle> fileRectangles = rectangleBusiness.Retrieve(openFileDialog.FileName);
-                Rectangles = fileRectangles;
+                AppState appState = new AppState();
+                appState = rectangleBusiness.Retrieve(openFileDialog.FileName);
+                Rectangles = appState.Rectangles1;
+                AuxRectangles = appState.AuxRectangles1;
                 canvasPanel.Invalidate();
             }
         }
@@ -150,13 +164,14 @@ namespace BDX.MagicShapes.UI
         private void buttonClear_Click(object sender, EventArgs e)
         {
             Rectangles.Clear();
+            AuxRectangles.Clear();
+            mergedCounter = 0;
             canvasPanel.Invalidate();
         }
 
         private Boolean AddRectangle()
         {
             Boolean rectangleAdded = true;
-            Rectangle tempRectangle = new Rectangle();
             LinkedList<Rectangle> mergedRectangles = new LinkedList<Rectangle>();
             foreach (Rectangle listRectangle in Rectangles)
             {
@@ -173,7 +188,6 @@ namespace BDX.MagicShapes.UI
                     {
                         //MessageBox.Show("On top of another");
                         Rectangle.Height = Rectangle.Height + listRectangle.Height;
-                        tempRectangle = listRectangle;
                         mergedRectangles.AddLast(listRectangle);
                     }
                     else if (InAcceptableRange(Rectangle.Right, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Bottom) && InAcceptableRange(Rectangle.Left, listRectangle.Left))
@@ -181,7 +195,6 @@ namespace BDX.MagicShapes.UI
                         //MessageBox.Show("On bottom of another");
                         Rectangle.Location = listRectangle.Location;
                         Rectangle.Height = Rectangle.Height + listRectangle.Height;
-                        tempRectangle = listRectangle;
                         mergedRectangles.AddLast(listRectangle);
                     }
                     else if (InAcceptableRange(Rectangle.Left, listRectangle.Right) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
@@ -189,27 +202,94 @@ namespace BDX.MagicShapes.UI
                         //MessageBox.Show("On right of another");
                         Rectangle.Location = listRectangle.Location;
                         Rectangle.Width = Rectangle.Width + listRectangle.Width;
-                        tempRectangle = listRectangle;
                         mergedRectangles.AddLast(listRectangle);
                     }
                     else if (InAcceptableRange(Rectangle.Right, listRectangle.Left) && InAcceptableRange(Rectangle.Top, listRectangle.Top) && InAcceptableRange(Rectangle.Bottom, listRectangle.Bottom))
                     {
                         //MessageBox.Show("On left of another");
                         Rectangle.Width = Rectangle.Width + listRectangle.Width;
-                        tempRectangle = listRectangle;
                         mergedRectangles.AddLast(listRectangle);
+                    }
+                    else//Special cases when the new rectangle has different width or height
+                    {
+                        Rectangle auxRectangle = new Rectangle();
+                        if (InAcceptableRange(Rectangle.Bottom, listRectangle.Top))
+                        {
+                            if (Rectangle.Width > listRectangle.Width && listRectangle.Right <= Rectangle.Right && listRectangle.Left >= Rectangle.Left)
+                            {
+                                auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top + Rectangle.Height / 2);
+                                auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
+                                AuxRectangles.AddLast(auxRectangle);
+                            }
+                            else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
+                            {
+                                auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top + Rectangle.Height / 2);
+                                auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
+                                AuxRectangles.AddLast(auxRectangle);
+                            }
+                            mergedCounter++;
+                        }
+                        else if (InAcceptableRange(Rectangle.Top, listRectangle.Bottom))
+                        {
+                            if (Rectangle.Width > listRectangle.Width && listRectangle.Right <= Rectangle.Right && listRectangle.Left >= Rectangle.Left)
+                            {
+                                auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top - listRectangle.Height / 2);
+                                auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
+                                AuxRectangles.AddLast(auxRectangle);
+                            }
+                            else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
+                            {
+                                auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top - listRectangle.Height / 2);//************
+                                auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
+                                AuxRectangles.AddLast(auxRectangle);
+                            }
+                            mergedCounter++;
+                        }//If the new rectangle is on side of another...
+                        else if (InAcceptableRange(Rectangle.Right, listRectangle.Left))
+                        {
+                            if (Rectangle.Height > listRectangle.Height && listRectangle.Bottom <= Rectangle.Bottom && listRectangle.Top >= Rectangle.Top)
+                            {
+                                auxRectangle.Location = new Point(listRectangle.X - Rectangle.Width / 2, listRectangle.Y);
+                                auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, listRectangle.Height);
+                                AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
+                            }
+                            else if (Rectangle.Height < listRectangle.Height && listRectangle.Bottom >= Rectangle.Bottom && listRectangle.Top <= Rectangle.Top)
+                            {
+                                auxRectangle.Location = new Point(listRectangle.X - Rectangle.Width / 2, Rectangle.Y);
+                                auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, Rectangle.Height);
+                                AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
+                            }
+                        }
+                        else if (InAcceptableRange(Rectangle.Left, listRectangle.Right))
+                        {
+                            if (Rectangle.Height > listRectangle.Height && listRectangle.Bottom <= Rectangle.Bottom && listRectangle.Top >= Rectangle.Top)
+                            {
+                                auxRectangle.Location = new Point((listRectangle.Right + listRectangle.Left) / 2, listRectangle.Y);
+                                auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, listRectangle.Height);
+                                AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
+                            }
+                            else if (Rectangle.Height < listRectangle.Height && listRectangle.Bottom >= Rectangle.Bottom && listRectangle.Top <= Rectangle.Top)
+                            {
+                                auxRectangle.Location = new Point((listRectangle.Right + listRectangle.Left) / 2, Rectangle.Y);
+                                auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, Rectangle.Height);
+                                AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
+                            }
+                        }
                     }
                 }
             }
             if (rectangleAdded)
             {
-                //Rectangles.Remove(tempRectangle);
                 foreach (Rectangle mergedRectangle in mergedRectangles)
                 {
                     Rectangles.Remove(mergedRectangle);
                 }
                 Rectangles.AddLast(Rectangle);
-                label1.Text = "Cantidad de rectángulos: " + Rectangles.Count;
+                label1.Text = "Cantidad de rectángulos: " + (Rectangles.Count - mergedCounter);
                 return true;
 
             }

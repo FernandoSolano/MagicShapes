@@ -43,11 +43,11 @@
   <ItemGroup>
     <Compile Include="Business\RectangleBusiness.cs" />
     <Compile Include="Data\RectangleData.cs" />
+    <Compile Include="Model\AppState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Logic\" />
-    <Folder Include="Model\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BDX.MagicShapes.Core.Model;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -12,13 +13,13 @@ namespace BDX.MagicShapes.Core.Data
 {
     public class RectangleData
     {
-        public Boolean Store(LinkedList<Rectangle> rectangles, String path)
+        public Boolean Store(AppState appState, String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
                 Stream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                formatter.Serialize(stream, rectangles);
+                formatter.Serialize(stream, appState);
                 stream.Close();
                 return true;
             }
@@ -28,15 +29,15 @@ namespace BDX.MagicShapes.Core.Data
             }
         }
 
-        public LinkedList<Rectangle> Retrieve(String path)
+        public AppState Retrieve(String path)
         {
             try
             {
                 IFormatter formatter = new BinaryFormatter();
                 Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                LinkedList<Rectangle> rectangles = (LinkedList<Rectangle>)formatter.Deserialize(stream);
+                AppState appState = (AppState)formatter.Deserialize(stream);
                 stream.Close();
-                return rectangles;
+                return appState;
             }
             catch
             {
