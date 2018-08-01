@@ -129,7 +129,7 @@ namespace BDX.MagicShapes.UI
         {
             GraphicsCanvas.Clear(Color.White);
             LoadRectangles();
-            label1.Text = "Cantidad de rectángulos: " + (Rectangles.Count - mergedCounter);
+            label1.Text = "Shapes quantity: " + (Rectangles.Count - mergedCounter);
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -291,7 +291,7 @@ namespace BDX.MagicShapes.UI
                     Rectangles.Remove(mergedRectangle);
                 }
                 Rectangles.AddLast(Rectangle);
-                label1.Text = "Cantidad de rectángulos: " + (Rectangles.Count - mergedCounter);
+                label1.Text = "Shapes quantity: " + (Rectangles.Count - mergedCounter);
                 return true;
 
             }
