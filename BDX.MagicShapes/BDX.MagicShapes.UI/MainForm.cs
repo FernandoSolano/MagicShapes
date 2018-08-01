@@ -220,14 +220,15 @@ namespace BDX.MagicShapes.UI
                                 auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top + Rectangle.Height / 2);
                                 auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
                                 AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
                             }
                             else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
                             {
                                 auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top + Rectangle.Height / 2);
                                 auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
                                 AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
                             }
-                            mergedCounter++;
                         }
                         else if (InAcceptableRange(Rectangle.Top, listRectangle.Bottom))
                         {
@@ -236,14 +237,15 @@ namespace BDX.MagicShapes.UI
                                 auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top - listRectangle.Height / 2);
                                 auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
                                 AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
                             }
                             else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
                             {
                                 auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top - listRectangle.Height / 2);//************
                                 auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
                                 AuxRectangles.AddLast(auxRectangle);
+                                mergedCounter++;
                             }
-                            mergedCounter++;
                         }//If the new rectangle is on side of another...
                         else if (InAcceptableRange(Rectangle.Right, listRectangle.Left))
                         {
