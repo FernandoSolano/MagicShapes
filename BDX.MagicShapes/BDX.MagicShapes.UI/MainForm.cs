@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
 
 namespace BDX.MagicShapes.UI
@@ -20,6 +21,7 @@ namespace BDX.MagicShapes.UI
         private Rectangle Rectangle;
         private LinkedList<Rectangle> Rectangles, AuxRectangles;
         private LinkedList<Point[]> AuxLines;
+        private AppState PreviousState, LatestState;
         private float ZoomValue;
         private int mergedCounter;
 
@@ -29,6 +31,8 @@ namespace BDX.MagicShapes.UI
             Rectangles = new LinkedList<Rectangle>();
             AuxRectangles = new LinkedList<Rectangle>();
             AuxLines = new LinkedList<Point[]>();
+            PreviousState = new AppState();
+            LatestState = new AppState();
             GraphicsCanvas = this.canvasPanel.CreateGraphics();
             GraphicsCanvas.InterpolationMode = InterpolationMode.HighQualityBilinear;
             ZoomValue = 1f;
@@ -132,6 +136,28 @@ namespace BDX.MagicShapes.UI
             label1.Text = "Shapes quantity: " + (Rectangles.Count - mergedCounter);
         }
 
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            LatestState.Rectangles1 = Rectangles;
+            LatestState.AuxRectangles1 = AuxRectangles;
+            Rectangles = PreviousState.Rectangles1;
+            AuxRectangles = PreviousState.AuxRectangles1;
+            canvasPanel.Invalidate();
+            redoToolStripMenuItem.Enabled = true;
+            undoToolStripMenuItem.Enabled = false;
+        }
+
+        private void redoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            PreviousState.Rectangles1 = Rectangles;
+            PreviousState.AuxRectangles1 = AuxRectangles;
+            Rectangles = LatestState.Rectangles1;
+            AuxRectangles = LatestState.AuxRectangles1;
+            canvasPanel.Invalidate();
+            redoToolStripMenuItem.Enabled = false;
+            undoToolStripMenuItem.Enabled = true;
+        }
+
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
@@ -163,14 +189,33 @@ namespace BDX.MagicShapes.UI
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
+            PreviousState.Rectangles1 = Rectangles;
+            PreviousState.AuxRectangles1 = AuxRectangles;
             Rectangles.Clear();
             AuxRectangles.Clear();
+            LatestState.Rectangles1 = Rectangles;
+            LatestState.AuxRectangles1 = AuxRectangles;
             mergedCounter = 0;
             canvasPanel.Invalidate();
+            redoToolStripMenuItem.Enabled = false;
+            undoToolStripMenuItem.Enabled = true;
+        }
+
+        public static T DeepCopy<T>(T other)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(ms, other);
+                ms.Position = 0;
+                return (T)formatter.Deserialize(ms);
+            }
         }
 
         private Boolean AddRectangle()
         {
+            PreviousState.Rectangles1 = DeepCopy(Rectangles);
+            PreviousState.AuxRectangles1 = DeepCopy(AuxRectangles);
             Boolean rectangleAdded = true;
             LinkedList<Rectangle> mergedRectangles = new LinkedList<Rectangle>();
             foreach (Rectangle listRectangle in Rectangles)
@@ -292,8 +337,9 @@ namespace BDX.MagicShapes.UI
                 }
                 Rectangles.AddLast(Rectangle);
                 label1.Text = "Shapes quantity: " + (Rectangles.Count - mergedCounter);
+                undoToolStripMenuItem.Enabled = true;
+                redoToolStripMenuItem.Enabled = false;
                 return true;
-
             }
             return false;
         }
