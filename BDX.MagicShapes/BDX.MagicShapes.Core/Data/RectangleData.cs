@@ -3,19 +3,21 @@ using System;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 
 namespace BDX.MagicShapes.Core.Data
 {
     public class RectangleData
     {
+
         public Boolean Store(AppState appState, String path)
         {
             try
             {
-                IFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-                formatter.Serialize(stream, appState);
-                stream.Close();
+                XmlSerializer xmlSerializer = new XmlSerializer(appState.GetType());
+                TextWriter textWriter = new StreamWriter(path);
+                xmlSerializer.Serialize(textWriter, appState);
+                textWriter.Close();
                 return true;
             }
             catch (Exception e)
@@ -29,10 +31,11 @@ namespace BDX.MagicShapes.Core.Data
         {
             try
             {
-                IFormatter formatter = new BinaryFormatter();
-                Stream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                AppState appState = (AppState)formatter.Deserialize(stream);
-                stream.Close();
+                AppState appState = new AppState();
+                XmlSerializer xmlSerializer = new XmlSerializer(appState.GetType());
+                TextReader textReader = new StreamReader(path);
+                appState = (AppState)xmlSerializer.Deserialize(textReader);
+                textReader.Close();
                 return appState;
             }
             catch (Exception e)

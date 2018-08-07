@@ -19,8 +19,8 @@ namespace BDX.MagicShapes.UI
         private Pen BorderPen;
         private SolidBrush Brush, AuxBrush;
         private Rectangle Rectangle;
-        private LinkedList<Rectangle> Rectangles, AuxRectangles;
-        private LinkedList<Point[]> AuxLines;
+        private List<Rectangle> Rectangles, AuxRectangles;
+        private List<Point[]> AuxLines;
         private AppState PreviousState, LatestState;
         private float ZoomValue;
         private int mergedCounter;
@@ -28,9 +28,9 @@ namespace BDX.MagicShapes.UI
         public MainForm()
         {
             InitializeComponent();
-            Rectangles = new LinkedList<Rectangle>();
-            AuxRectangles = new LinkedList<Rectangle>();
-            AuxLines = new LinkedList<Point[]>();
+            Rectangles = new List<Rectangle>();
+            AuxRectangles = new List<Rectangle>();
+            AuxLines = new List<Point[]>();
             PreviousState = new AppState();
             LatestState = new AppState();
             GraphicsCanvas = this.canvasPanel.CreateGraphics();
@@ -163,8 +163,8 @@ namespace BDX.MagicShapes.UI
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
             saveFileDialog.FileName = "MagicShapesSave";
-            saveFileDialog.DefaultExt = "bin";
-            saveFileDialog.Filter = "Binary (*.bin)|*.bin";
+            saveFileDialog.DefaultExt = "xml";
+            saveFileDialog.Filter = "XML (*.xml)|*.xml";
             saveFileDialog.ShowDialog();
             RectangleBusiness rectangleBusiness = new RectangleBusiness();
             rectangleBusiness.Store(new AppState(Rectangles, AuxRectangles), saveFileDialog.FileName);
@@ -174,7 +174,7 @@ namespace BDX.MagicShapes.UI
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.InitialDirectory = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
-            openFileDialog.Filter = "Binary (*.bin)|*.bin";
+            openFileDialog.Filter = "XML (*.xml)|*.xml";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -264,14 +264,14 @@ namespace BDX.MagicShapes.UI
                             {
                                 auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top + Rectangle.Height / 2);
                                 auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                             else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
                             {
                                 auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top + Rectangle.Height / 2);
                                 auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                         }
@@ -281,14 +281,14 @@ namespace BDX.MagicShapes.UI
                             {
                                 auxRectangle.Location = new Point(listRectangle.X, Rectangle.Top - listRectangle.Height / 2);
                                 auxRectangle.Size = new Size(listRectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                             else if (Rectangle.Width < listRectangle.Width && listRectangle.Right >= Rectangle.Right && listRectangle.Left <= Rectangle.Left)
                             {
                                 auxRectangle.Location = new Point(Rectangle.X, Rectangle.Top - listRectangle.Height / 2);//************
                                 auxRectangle.Size = new Size(Rectangle.Width, (Rectangle.Height + listRectangle.Height) / 2);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                         }//If the new rectangle is on side of another...
@@ -298,14 +298,14 @@ namespace BDX.MagicShapes.UI
                             {
                                 auxRectangle.Location = new Point(listRectangle.X - Rectangle.Width / 2, listRectangle.Y);
                                 auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, listRectangle.Height);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                             else if (Rectangle.Height < listRectangle.Height && listRectangle.Bottom >= Rectangle.Bottom && listRectangle.Top <= Rectangle.Top)
                             {
                                 auxRectangle.Location = new Point(listRectangle.X - Rectangle.Width / 2, Rectangle.Y);
                                 auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, Rectangle.Height);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                         }
@@ -315,14 +315,14 @@ namespace BDX.MagicShapes.UI
                             {
                                 auxRectangle.Location = new Point((listRectangle.Right + listRectangle.Left) / 2, listRectangle.Y);
                                 auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, listRectangle.Height);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                             else if (Rectangle.Height < listRectangle.Height && listRectangle.Bottom >= Rectangle.Bottom && listRectangle.Top <= Rectangle.Top)
                             {
                                 auxRectangle.Location = new Point((listRectangle.Right + listRectangle.Left) / 2, Rectangle.Y);
                                 auxRectangle.Size = new Size((Rectangle.Width + listRectangle.Width) / 2, Rectangle.Height);
-                                AuxRectangles.AddLast(auxRectangle);
+                                AuxRectangles.Add(auxRectangle);
                                 mergedCounter++;
                             }
                         }
@@ -335,7 +335,7 @@ namespace BDX.MagicShapes.UI
                 {
                     Rectangles.Remove(mergedRectangle);
                 }
-                Rectangles.AddLast(Rectangle);
+                Rectangles.Add(Rectangle);
                 label1.Text = "Shapes quantity: " + (Rectangles.Count - mergedCounter);
                 undoToolStripMenuItem.Enabled = true;
                 redoToolStripMenuItem.Enabled = false;
