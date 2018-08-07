@@ -1,13 +1,8 @@
 ﻿using BDX.MagicShapes.Core.Model;
 using System;
-using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BDX.MagicShapes.Core.Data
 {
@@ -23,8 +18,9 @@ namespace BDX.MagicShapes.Core.Data
                 stream.Close();
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.InnerException);
                 return false;
             }
         }
@@ -39,8 +35,9 @@ namespace BDX.MagicShapes.Core.Data
                 stream.Close();
                 return appState;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.InnerException);
                 return null;
             }
         }

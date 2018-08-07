@@ -138,10 +138,10 @@ namespace BDX.MagicShapes.UI
 
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            LatestState.Rectangles1 = Rectangles;
-            LatestState.AuxRectangles1 = AuxRectangles;
-            Rectangles = PreviousState.Rectangles1;
-            AuxRectangles = PreviousState.AuxRectangles1;
+            LatestState.Rectangles = Rectangles;
+            LatestState.AuxRectangles = AuxRectangles;
+            Rectangles = PreviousState.Rectangles;
+            AuxRectangles = PreviousState.AuxRectangles;
             canvasPanel.Invalidate();
             redoToolStripMenuItem.Enabled = true;
             undoToolStripMenuItem.Enabled = false;
@@ -149,10 +149,10 @@ namespace BDX.MagicShapes.UI
 
         private void redoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            PreviousState.Rectangles1 = Rectangles;
-            PreviousState.AuxRectangles1 = AuxRectangles;
-            Rectangles = LatestState.Rectangles1;
-            AuxRectangles = LatestState.AuxRectangles1;
+            PreviousState.Rectangles = Rectangles;
+            PreviousState.AuxRectangles = AuxRectangles;
+            Rectangles = LatestState.Rectangles;
+            AuxRectangles = LatestState.AuxRectangles;
             canvasPanel.Invalidate();
             redoToolStripMenuItem.Enabled = false;
             undoToolStripMenuItem.Enabled = true;
@@ -181,20 +181,20 @@ namespace BDX.MagicShapes.UI
                 RectangleBusiness rectangleBusiness = new RectangleBusiness();
                 AppState appState = new AppState();
                 appState = rectangleBusiness.Retrieve(openFileDialog.FileName);
-                Rectangles = appState.Rectangles1;
-                AuxRectangles = appState.AuxRectangles1;
+                Rectangles = appState.Rectangles;
+                AuxRectangles = appState.AuxRectangles;
                 canvasPanel.Invalidate();
             }
         }
 
         private void buttonClear_Click(object sender, EventArgs e)
         {
-            PreviousState.Rectangles1 = Rectangles;
-            PreviousState.AuxRectangles1 = AuxRectangles;
+            PreviousState.Rectangles = Rectangles;
+            PreviousState.AuxRectangles = AuxRectangles;
             Rectangles.Clear();
             AuxRectangles.Clear();
-            LatestState.Rectangles1 = Rectangles;
-            LatestState.AuxRectangles1 = AuxRectangles;
+            LatestState.Rectangles = Rectangles;
+            LatestState.AuxRectangles = AuxRectangles;
             mergedCounter = 0;
             canvasPanel.Invalidate();
             redoToolStripMenuItem.Enabled = false;
@@ -214,8 +214,8 @@ namespace BDX.MagicShapes.UI
 
         private Boolean AddRectangle()
         {
-            PreviousState.Rectangles1 = DeepCopy(Rectangles);
-            PreviousState.AuxRectangles1 = DeepCopy(AuxRectangles);
+            PreviousState.Rectangles = DeepCopy(Rectangles);
+            PreviousState.AuxRectangles = DeepCopy(AuxRectangles);
             Boolean rectangleAdded = true;
             LinkedList<Rectangle> mergedRectangles = new LinkedList<Rectangle>();
             foreach (Rectangle listRectangle in Rectangles)

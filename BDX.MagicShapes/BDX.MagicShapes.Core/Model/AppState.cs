@@ -7,7 +7,9 @@ namespace BDX.MagicShapes.Core.Model
     [Serializable]
     public class AppState
     {
-        private LinkedList<Rectangle> Rectangles, AuxRectangles;
+
+        public LinkedList<Rectangle> Rectangles { get; set; }
+        public LinkedList<Rectangle> AuxRectangles { get; set; }
 
         public AppState()
         {
@@ -20,8 +22,5 @@ namespace BDX.MagicShapes.Core.Model
             this.Rectangles = Rectangles;
             this.AuxRectangles = AuxRectangles;
         }
-
-        public LinkedList<Rectangle> Rectangles1 { get => Rectangles; set => Rectangles = value; }
-        public LinkedList<Rectangle> AuxRectangles1 { get => AuxRectangles; set => AuxRectangles = value; }
     }
 }
